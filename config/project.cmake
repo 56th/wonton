@@ -175,6 +175,18 @@ if (LAPACKE_DIR)
 
     set(LAPACKE_LIBRARIES "-Wl,-rpath,${LAPACKE_LIBRARY_DIR} -L${LAPACKE_LIBRARY_DIR} -l${LAPACKE_LIBRARIES} -l${LAPACK_lapack_LIBRARIES} -l${LAPACK_blas_LIBRARIES}")
 
+    # If we don't want to link with Fortran then we have to tell it to link
+    # with the Fortran libraries because LAPACK is written/compiled in Fortran
+    #
+    # NEEDED FOR STATIC LAPACK LIBS
+
+    if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+    elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+      set(LAPACKE_LIBRARIES "${LAPACKE_LIBRARIES} -lgfortran")
+    elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
+      set(LAPACKE_LIBRARIES "${LAPACKE_LIBRARIES} -lifcore")
+    endif()
+
   endif(LAPACKE_LIBRARIES STREQUAL "lapacke")
 
 else (LAPACKE_DIR)
@@ -262,6 +274,11 @@ include_directories(${CMAKE_BINARY_DIRECTORY})
 cinch_add_library_target(wonton wonton)
 cinch_target_link_libraries(wonton ${LAPACKE_LIBRARIES})
 
+# Application directory
+
+cinch_add_application_directory(app)
+
+
 
 # build the WONTON_LIBRARIES variable
 set(WONTON_LIBRARIES ${WONTON_LIBRARY} ${WONTON_EXTRA_LIBRARIES} CACHE STRING "List of libraries to link with wonton")
@@ -275,9 +292,9 @@ get_directory_property(WONTON_COMPILE_DEFINITIONS DIRECTORY ${CMAKE_SOURCE_DIR} 
 # WONTON was built and which TPLs it used
 #############################################################################
 
-configure_file(${PROJECT_SOURCE_DIR}/cmake/wonton_config.cmake.in 
-  ${PROJECT_BINARY_DIR}/wonton_config.cmake @ONLY)
-install(FILES ${PROJECT_BINARY_DIR}/wonton_config.cmake 
+configure_file(${PROJECT_SOURCE_DIR}/cmake/wonton-config.cmake.in 
+  ${PROJECT_BINARY_DIR}/wonton-config.cmake @ONLY)
+install(FILES ${PROJECT_BINARY_DIR}/wonton-config.cmake 
   DESTINATION ${CMAKE_INSTALL_PREFIX}/share/cmake/)
 
 
